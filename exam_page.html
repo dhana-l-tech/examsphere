@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exam – ExamSphere</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#020617;--surface:#0f172a;--card:#1e293b;--border:#334155;--purple:#7c3aed;--blue:#3b82f6;--pink:#ec4899;--cyan:#06b6d4;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--text:#f8fafc;--muted:#94a3b8}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+/* EXAM HEADER */
+.exam-header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,23,42,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+.exam-title{font-family:'Clash Display',sans-serif;font-size:1.1rem}
+.timer{display:flex;align-items:center;gap:.5rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:.5rem 1.25rem;border-radius:50px;font-family:'Clash Display',sans-serif;font-size:1.1rem;color:var(--red)}
+.timer.warning{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.progress-text{font-size:.85rem;color:var(--muted)}
+/* INSTRUCTIONS */
+.instructions{max-width:600px;margin:8rem auto 0;padding:2rem;text-align:center}
+.instr-icon{font-size:3rem;margin-bottom:1rem}
+.instr-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;text-align:left;margin:1.5rem 0}
+.instr-card h3{font-family:'Clash Display',sans-serif;font-size:1rem;margin-bottom:1rem;color:var(--purple)}
+.instr-card li{font-size:.9rem;color:var(--muted);margin-bottom:.5rem;padding-left:1rem;position:relative;line-height:1.5}
+.instr-card li::before{content:'→';position:absolute;left:0;color:var(--purple)}
+.start-exam-btn{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border:none;padding:1rem 3rem;border-radius:50px;font-family:'Clash Display',sans-serif;font-size:1rem;cursor:pointer;transition:all .3s;box-shadow:0 0 30px rgba(124,58,237,0.3)}
+.start-exam-btn:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(124,58,237,0.5)}
+/* EXAM BODY */
+.exam-body{display:none;padding-top:5rem}
+.exam-layout{display:grid;grid-template-columns:1fr 220px;gap:1.5rem;max-width:1100px;margin:0 auto;padding:2rem}
+/* QUESTION */
+.question-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem}
+.q-num{font-size:.8rem;color:var(--purple);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+.q-text{font-size:1.05rem;line-height:1.6;margin-bottom:1.75rem;font-weight:500}
+.options{display:flex;flex-direction:column;gap:.75rem}
+.option{display:flex;align-items:flex-start;gap:.75rem;padding:1rem 1.25rem;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;position:relative}
+.option:hover{border-color:rgba(124,58,237,0.4);background:rgba(124,58,237,0.05)}
+.option.selected{border-color:var(--purple);background:rgba(124,58,237,0.1)}
+.option-key{width:28px;height:28px;border-radius:8px;background:rgba(51,65,85,0.5);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;flex-shrink:0;transition:.2s}
+.option.selected .option-key{background:var(--purple);color:#fff}
+.option-text{font-size:.95rem;line-height:1.4;padding-top:3px}
+.nav-btns{display:flex;justify-content:space-between;margin-top:1.75rem;gap:.75rem}
+.nav-btn{flex:1;padding:.75rem;border-radius:10px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:500;transition:all .2s}
+.prev-btn{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.prev-btn:hover{border-color:var(--purple);color:var(--purple)}
+.next-btn{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff}
+.next-btn:hover{transform:translateY(-1px);box-shadow:0 5px 15px rgba(124,58,237,0.3)}
+.submit-btn{background:linear-gradient(135deg,var(--green),var(--cyan));color:#fff;width:100%;padding:1rem;border-radius:12px;border:none;cursor:pointer;font-family:'Clash Display',sans-serif;font-size:1rem;display:none;margin-top:1rem;transition:all .3s}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(34,197,94,0.3)}
+/* SIDEBAR NAV */
+.question-nav{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;height:fit-content;position:sticky;top:5.5rem}
+.qnav-title{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem}
+.qnav-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem}
+.qnav-btn{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-size:.8rem;transition:all .2s}
+.qnav-btn.current{border-color:var(--blue);color:var(--blue)}
+.qnav-btn.answered{background:rgba(34,197,94,0.1);border-color:var(--green);color:var(--green)}
+.legend{margin-top:.75rem;display:flex;flex-direction:column;gap:.4rem}
+.legend-item{display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:3px}
+/* RESULT OVERLAY */
+.result-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(2,6,23,0.95);backdrop-filter:blur(10px);align-items:center;justify-content:center}
+.result-overlay.show{display:flex}
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:3rem;text-align:center;max-width:480px;width:90%;position:relative;animation:slideUp .5s ease}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.score-ring{width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--purple) var(--pct),rgba(51,65,85,0.5) 0);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;position:relative}
+.score-ring-inner{width:88px;height:88px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-size:1.4rem;flex-direction:column;gap:.1rem}
+.score-ring-inner small{font-size:.6rem;color:var(--muted);font-family:'DM Sans',sans-serif}
+.result-grade{font-family:'Clash Display',sans-serif;font-size:3rem;margin-bottom:.5rem}
+.result-msg{color:var(--muted);font-size:.95rem;margin-bottom:2rem;line-height:1.5}
+.result-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:2rem}
+.result-stat{background:var(--surface);border-radius:10px;padding:.75rem}
+.result-stat-val{font-family:'Clash Display',sans-serif;font-size:1.2rem}
+.result-stat-label{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.result-back-btn{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border:none;padding:.9rem 2.5rem;border-radius:50px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;transition:all .3s}
+.result-back-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(124,58,237,0.3)}
+</style>
+</head>
+<body>
+<div class="exam-header">
+  <div class="exam-title" id="examTitle">Loading...</div>
+  <div class="timer" id="timer" style="display:none">⏱ --:--</div>
+  <div class="progress-text" id="progressText"></div>
+</div>
+
+<!-- INSTRUCTIONS -->
+<div class="instructions" id="instructionsPage">
+  <div class="instr-icon">📋</div>
+  <h1 style="font-family:'Clash Display',sans-serif;font-size:1.8rem;margin-bottom:.5rem" id="instrTitle">Loading...</h1>
+  <p style="color:var(--muted);margin-bottom:1.5rem" id="instrMeta"></p>
+  <div class="instr-card">
+    <h3>📌 Before you begin</h3>
+    <ul style="list-style:none">
+      <li>Read each question carefully before selecting an answer</li>
+      <li>You can navigate between questions freely</li>
+      <li>Timer starts when you click "Start Exam"</li>
+      <li>Exam auto-submits when time runs out</li>
+      <li>Each exam can only be attempted once</li>
+      <li>Do not refresh the page during the exam</li>
+    </ul>
+  </div>
+  <button class="start-exam-btn" onclick="startExam()">Start Exam →</button>
+</div>
+
+<!-- EXAM -->
+<div class="exam-body" id="examBody">
+  <div class="exam-layout">
+    <div>
+      <div class="question-card">
+        <div class="q-num" id="qNum">Question 1 of 10</div>
+        <div class="q-text" id="qText"></div>
+        <div class="options" id="options"></div>
+        <div class="nav-btns">
+          <button class="nav-btn prev-btn" onclick="navigate(-1)">← Previous</button>
+          <button class="nav-btn next-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+        </div>
+        <button class="submit-btn" id="submitBtn" onclick="submitExam()">🎯 Submit Exam</button>
+      </div>
+    </div>
+    <div>
+      <div class="question-nav">
+        <div class="qnav-title">Questions</div>
+        <div class="qnav-grid" id="qnavGrid"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,0.4);border:1px solid var(--green)"></div>Answered</div>
+          <div class="legend-item"><div class="legend-dot" style="border:1.5px solid var(--blue)"></div>Current</div>
+          <div class="legend-item"><div class="legend-dot" style="border:1px solid var(--border)"></div>Not visited</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <div class="score-ring" id="scoreRing" style="--pct:0deg">
+      <div class="score-ring-inner">
+        <span id="resScore">0</span>
+        <small>/ <span id="resTotal">0</span></small>
+      </div>
+    </div>
+    <div class="result-grade" id="resGrade">–</div>
+    <p class="result-msg" id="resMsg"></p>
+    <div class="result-stats">
+      <div class="result-stat"><div class="result-stat-val" id="resPct">–</div><div class="result-stat-label">Percentage</div></div>
+      <div class="result-stat"><div class="result-stat-val" id="resCorrect">–</div><div class="result-stat-label">Correct</div></div>
+      <div class="result-stat"><div class="result-stat-val" id="resTotalQ">–</div><div class="result-stat-label">Total Qs</div></div>
+    </div>
+    <button class="result-back-btn" onclick="window.location.href='/student'">← Back to Dashboard</button>
+  </div>
+</div>
+
+<script>
+const examId = parseInt(window.location.pathname.split('/').pop());
+let questions = [], answers = {}, current = 0, timerInterval = null, totalSeconds = 0;
+
+window.addEventListener('beforeunload', e => {
+  if(document.getElementById('examBody').style.display !== 'none' && !document.getElementById('resultOverlay').classList.contains('show')){
+    e.preventDefault(); e.returnValue = '';
+  }
+});
+
+async function loadExam(){
+  const data = await fetch(`/api/exam/${examId}/questions`).then(r=>r.json());
+  questions = data.questions;
+  totalSeconds = data.exam.duration * 60;
+  document.getElementById('examTitle').textContent = data.exam.subject;
+  document.getElementById('instrTitle').textContent = data.exam.subject;
+  document.getElementById('instrMeta').textContent = `${questions.length} questions • ${data.exam.duration} minutes • ${data.exam.total_marks} marks`;
+}
+
+function startExam(){
+  document.getElementById('instructionsPage').style.display = 'none';
+  document.getElementById('examBody').style.display = 'block';
+  document.getElementById('timer').style.display = 'flex';
+  buildNav(); showQuestion(0); startTimer();
+}
+
+function buildNav(){
+  const grid = document.getElementById('qnavGrid');
+  grid.innerHTML = questions.map((q,i) => `<button class="qnav-btn${i===0?' current':''}" id="qnav-${i}" onclick="showQuestion(${i})">${i+1}</button>`).join('');
+}
+
+function showQuestion(idx){
+  current = idx;
+  const q = questions[idx];
+  document.getElementById('qNum').textContent = `Question ${idx+1} of ${questions.length}`;
+  document.getElementById('qText').textContent = q.question_text;
+  const opts = ['A','B','C','D'];
+  document.getElementById('options').innerHTML = ['option_a','option_b','option_c','option_d'].map((key,i) => `
+    <div class="option${answers[q.question_id]===opts[i]?' selected':''}" onclick="selectAnswer('${opts[i]}', this, ${q.question_id})">
+      <div class="option-key">${opts[i]}</div>
+      <div class="option-text">${q[key]}</div>
+    </div>`).join('');
+  document.querySelectorAll('.qnav-btn').forEach((b,i)=>{
+    b.classList.remove('current');
+    if(i===idx) b.classList.add('current');
+  });
+  document.getElementById('nextBtn').textContent = idx < questions.length-1 ? 'Next →' : '';
+  document.getElementById('nextBtn').style.display = idx < questions.length-1 ? 'flex' : 'none';
+  document.getElementById('submitBtn').style.display = idx === questions.length-1 ? 'block' : 'none';
+  document.getElementById('progressText').textContent = `${Object.keys(answers).length}/${questions.length} answered`;
+}
+
+function selectAnswer(choice, el, qid){
+  answers[qid] = choice;
+  document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  const navBtn = document.getElementById(`qnav-${current}`);
+  navBtn.classList.add('answered');
+  document.getElementById('progressText').textContent = `${Object.keys(answers).length}/${questions.length} answered`;
+}
+
+function navigate(dir){
+  const next = current + dir;
+  if(next >= 0 && next < questions.length) showQuestion(next);
+}
+
+function startTimer(){
+  updateTimerDisplay();
+  timerInterval = setInterval(()=>{
+    totalSeconds--;
+    updateTimerDisplay();
+    if(totalSeconds <= 60) document.getElementById('timer').classList.add('warning');
+    if(totalSeconds <= 0){ clearInterval(timerInterval); submitExam(true); }
+  }, 1000);
+}
+
+function updateTimerDisplay(){
+  const m = Math.floor(totalSeconds/60), s = totalSeconds%60;
+  document.getElementById('timer').textContent = `⏱ ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+async function submitExam(auto=false){
+  if(!auto){
+    const unanswered = questions.length - Object.keys(answers).length;
+    if(unanswered > 0 && !confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) return;
+  }
+  clearInterval(timerInterval);
+  const res = await fetch('/api/exam/submit', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({exam_id: examId, answers})
+  }).then(r=>r.json());
+  if(res.error){ alert(res.error); window.location.href='/student'; return; }
+  showResult(res);
+}
+
+function showResult(res){
+  const pct = res.percentage;
+  const grade = res.grade;
+  const msgs = {'A+':'Outstanding! Perfect score! 🏆','A':'Excellent work! 🎉','B':'Well done! 👍','C':'Good effort! Keep practicing 💪','D':'You passed! More practice needed 📚','F':'Don\'t give up! Review and retry 🔄'};
+  const colors = {'A+':'#22c55e','A':'#22c55e','B':'#3b82f6','C':'#eab308','D':'#f97316','F':'#ef4444'};
+  document.getElementById('resScore').textContent = res.score;
+  document.getElementById('resTotal').textContent = res.total;
+  document.getElementById('resGrade').textContent = grade;
+  document.getElementById('resGrade').style.color = colors[grade] || '#fff';
+  document.getElementById('resMsg').textContent = msgs[grade] || '';
+  document.getElementById('resPct').textContent = pct + '%';
+  document.getElementById('resCorrect').textContent = res.correct;
+  document.getElementById('resTotalQ').textContent = res.total_questions;
+  const deg = Math.round(pct/100*360);
+  document.getElementById('scoreRing').style.setProperty('--pct', `${deg}deg`);
+  document.getElementById('scoreRing').style.background = `conic-gradient(${colors[grade]||'var(--purple)'} ${deg}deg, rgba(51,65,85,0.5) 0)`;
+  document.getElementById('resultOverlay').classList.add('show');
+}
+
+loadExam();
+</script>
+</body>
+</html>
