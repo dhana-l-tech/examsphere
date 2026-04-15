@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard – ExamSphere</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#020617;--surface:#0f172a;--card:#1e293b;--border:#334155;--purple:#7c3aed;--blue:#3b82f6;--pink:#ec4899;--cyan:#06b6d4;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--text:#f8fafc;--muted:#94a3b8}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:50;overflow-y:auto}
+.sidebar-logo{padding:1.5rem;font-family:'Clash Display',sans-serif;font-size:1.2rem;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem}
+.admin-badge{font-size:.7rem;background:rgba(236,72,153,0.1);color:var(--pink);border:1px solid rgba(236,72,153,0.3);padding:.15rem .5rem;border-radius:50px;-webkit-text-fill-color:var(--pink)}
+.sidebar-nav{flex:1;padding:1rem .75rem;display:flex;flex-direction:column;gap:.2rem}
+.nav-section{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:.75rem .9rem .25rem;margin-top:.5rem}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .9rem;border-radius:10px;cursor:pointer;font-size:.9rem;color:var(--muted);transition:all .2s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover,.nav-item.active{background:rgba(236,72,153,0.08);color:var(--text)}
+.nav-item.active{color:var(--pink);font-weight:500}
+.nav-icon{font-size:1rem;width:18px;text-align:center}
+.sidebar-bottom{padding:1rem;border-top:1px solid var(--border)}
+.admin-pill{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:rgba(236,72,153,0.05);border:1px solid rgba(236,72,153,0.15);border-radius:12px;margin-bottom:.75rem}
+.admin-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+.user-name{font-size:.85rem;font-weight:500}
+.user-role{font-size:.72rem;color:var(--pink)}
+.logout-btn{width:100%;padding:.6rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;transition:all .2s}
+.logout-btn:hover{background:rgba(239,68,68,0.2)}
+.main{margin-left:240px;flex:1;padding:2rem;overflow-y:auto}
+.page{display:none}.page.active{display:block}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;flex-wrap:gap}
+.page-title{font-family:'Clash Display',sans-serif;font-size:1.6rem}
+.page-sub{color:var(--muted);font-size:.9rem;margin-top:.2rem}
+.btn{padding:.65rem 1.25rem;border-radius:10px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
+.btn-primary{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 5px 15px rgba(236,72,153,0.3)}
+.btn-sm{padding:.4rem .85rem;font-size:.8rem;border-radius:8px}
+.btn-danger{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2)}
+.btn-danger:hover{background:rgba(239,68,68,0.2)}
+.btn-edit{background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.2)}
+.btn-edit:hover{background:rgba(59,130,246,0.2)}
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;display:flex;align-items:center;gap:1rem}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.stat-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.stat-val{font-family:'Clash Display',sans-serif;font-size:1.8rem;font-weight:700;line-height:1}
+/* TABLE */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1.5rem}
+.table-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.search-input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.5rem .9rem;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--text);outline:none;transition:.2s;width:220px}
+.search-input:focus{border-color:var(--purple)}
+table{width:100%;border-collapse:collapse}
+th{background:var(--surface);padding:.75rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+td{padding:.8rem 1rem;border-bottom:1px solid rgba(51,65,85,0.4);font-size:.88rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(30,41,59,0.3)}
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(2,6,23,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;width:90%;max-width:480px;max-height:90vh;overflow-y:auto;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-family:'Clash Display',sans-serif;font-size:1.2rem;margin-bottom:1.5rem}
+.form-row{margin-bottom:1rem}
+label{display:block;font-size:.78rem;font-weight:500;color:var(--muted);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;transition:.2s}
+input:focus,select:focus,textarea:focus{border-color:var(--purple)}
+select option{background:var(--surface)}
+textarea{resize:vertical;min-height:80px}
+.form-btns{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem}
+/* LEADERBOARD */
+.leader-item{display:flex;align-items:center;gap:1rem;padding:.9rem 1rem;border-bottom:1px solid rgba(51,65,85,0.4)}
+.leader-item:last-child{border-bottom:none}
+.rank{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+.rank.gold{background:rgba(234,179,8,0.15);color:var(--yellow)}
+.rank.silver{background:rgba(148,163,184,0.15);color:#94a3b8}
+.rank.bronze{background:rgba(251,146,60,0.15);color:#fb923c}
+.rank.other{background:var(--surface);color:var(--muted)}
+/* ANALYTICS */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.analytics-grid{grid-template-columns:1fr}}
+.perf-bar{display:flex;align-items:center;gap:1rem;margin-bottom:.85rem}
+.perf-bar-label{min-width:120px;font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.perf-bar-track{flex:1;background:rgba(51,65,85,0.5);border-radius:50px;height:8px;overflow:hidden}
+.perf-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--pink),var(--purple))}
+.perf-bar-pct{font-size:.78rem;color:var(--muted);min-width:36px;text-align:right}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">⬡ ExamSphere <span class="admin-badge">Admin</span></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">⊞</span> Dashboard</button>
+    <button class="nav-item" onclick="showPage('analytics',this)"><span class="nav-icon">📈</span> Analytics</button>
+    <button class="nav-item" onclick="showPage('leaderboard',this)"><span class="nav-icon">🏆</span> Leaderboard</button>
+    <div class="nav-section">Manage</div>
+    <button class="nav-item" onclick="showPage('students',this)"><span class="nav-icon">🎓</span> Students</button>
+    <button class="nav-item" onclick="showPage('exams',this)"><span class="nav-icon">📋</span> Exams</button>
+    <button class="nav-item" onclick="showPage('questions',this)"><span class="nav-icon">❓</span> Questions</button>
+    <button class="nav-item" onclick="showPage('results',this)"><span class="nav-icon">📊</span> Results</button>
+    <div class="nav-section">Communication</div>
+    <button class="nav-item" onclick="showPage('announcements',this)"><span class="nav-icon">📢</span> Announcements</button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="admin-pill">
+      <div class="admin-avatar">A</div>
+      <div><div class="user-name">Administrator</div><div class="user-role">System Admin</div></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">← Sign Out</button>
+  </div>
+</aside>
+
+<main class="main">
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header"><div><h1 class="page-title">Admin Dashboard</h1><p class="page-sub">System overview and quick stats</p></div></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(59,130,246,0.1)">🎓</div><div><div class="stat-label">Total Students</div><div class="stat-val" id="statStudents">–</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(124,58,237,0.1)">📋</div><div><div class="stat-label">Total Exams</div><div class="stat-val" id="statExams">–</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(34,197,94,0.1)">📊</div><div><div class="stat-label">Avg Score</div><div class="stat-val" id="statAvg">–</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(236,72,153,0.1)">✅</div><div><div class="stat-label">Attempts</div><div class="stat-val" id="statAttempts">–</div></div></div>
+  </div>
+  <div id="recentResults">Loading recent activity...</div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="page" id="page-analytics">
+  <div class="page-header"><div><h1 class="page-title">Analytics</h1><p class="page-sub">Performance insights across subjects and students</p></div></div>
+  <div class="analytics-grid">
+    <div class="table-wrap" style="overflow:visible">
+      <div class="table-header" style="border:none;padding-bottom:.5rem"><span style="font-family:'Clash Display',sans-serif;font-size:1rem">Subject Performance</span></div>
+      <div id="subjectPerf" style="padding:0 1.25rem 1.25rem"></div>
+    </div>
+    <div class="table-wrap" style="overflow:visible">
+      <div class="table-header" style="border:none;padding-bottom:.5rem"><span style="font-family:'Clash Display',sans-serif;font-size:1rem">Grade Distribution</span></div>
+      <div id="gradeDistrib" style="padding:0 1.25rem 1.25rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="page" id="page-leaderboard">
+  <div class="page-header"><div><h1 class="page-title">🏆 Leaderboard</h1><p class="page-sub">Top performing students across all exams</p></div></div>
+  <div class="table-wrap"><div id="leaderList" style="padding:.5rem 0">Loading...</div></div>
+</div>
+
+<!-- STUDENTS -->
+<div class="page" id="page-students">
+  <div class="page-header"><div><h1 class="page-title">Manage Students</h1><p class="page-sub">Add, edit, or remove student accounts</p></div><button class="btn btn-primary" onclick="openStudentModal()">+ Add Student</button></div>
+  <div class="table-wrap">
+    <div class="table-header"><input class="search-input" placeholder="🔍 Search students..." oninput="filterStudents(this.value)"><span id="studentCount" style="font-size:.85rem;color:var(--muted)"></span></div>
+    <table><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Year</th><th>Exams</th><th>Avg</th><th>Actions</th></tr></thead>
+    <tbody id="studentsBody"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr></tbody></table>
+  </div>
+</div>
+
+<!-- EXAMS -->
+<div class="page" id="page-exams">
+  <div class="page-header"><div><h1 class="page-title">Manage Exams</h1></div><button class="btn btn-primary" onclick="openExamModal()">+ Add Exam</button></div>
+  <div class="table-wrap">
+    <table><thead><tr><th>#</th><th>Subject</th><th>Duration</th><th>Marks</th><th>Questions</th><th>Actions</th></tr></thead>
+    <tbody id="examsBody"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr></tbody></table>
+  </div>
+</div>
+
+<!-- QUESTIONS -->
+<div class="page" id="page-questions">
+  <div class="page-header"><div><h1 class="page-title">Manage Questions</h1></div><button class="btn btn-primary" onclick="openQuestionModal()">+ Add Question</button></div>
+  <div style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <label style="font-size:.85rem;color:var(--muted);text-transform:none;letter-spacing:0">Filter by exam:</label>
+    <select id="examFilter" onchange="loadQuestions()" style="width:auto;padding:.5rem .9rem;font-size:.85rem">
+      <option value="">All exams</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th>Q</th><th>Question</th><th>A</th><th>B</th><th>C</th><th>D</th><th>Ans</th><th>Del</th></tr></thead>
+    <tbody id="questionsBody"><tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr></tbody></table>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="page" id="page-results">
+  <div class="page-header"><div><h1 class="page-title">All Results</h1><p class="page-sub">Complete exam performance data</p></div></div>
+  <div class="table-wrap">
+    <div class="table-header"><input class="search-input" placeholder="🔍 Search results..." oninput="filterResults(this.value)"></div>
+    <table><thead><tr><th>Student</th><th>Dept</th><th>Subject</th><th>Score</th><th>%</th><th>Grade</th><th>Date</th></tr></thead>
+    <tbody id="resultsBody"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr></tbody></table>
+  </div>
+</div>
+
+<!-- ANNOUNCEMENTS -->
+<div class="page" id="page-announcements">
+  <div class="page-header"><div><h1 class="page-title">Announcements</h1></div><button class="btn btn-primary" onclick="openAnnModal()">+ Post</button></div>
+  <div id="annList">Loading...</div>
+</div>
+</main>
+
+<!-- MODALS -->
+<div class="modal" id="studentModal">
+  <div class="modal-card">
+    <h3 class="modal-title" id="studentModalTitle">Add Student</h3>
+    <input type="hidden" id="studentId">
+    <div class="form-row"><label>Full Name</label><input id="sName" placeholder="Student name"></div>
+    <div class="form-row"><label>Email</label><input id="sEmail" type="email" placeholder="student@exam.com"></div>
+    <div class="form-row" id="sPasswordRow"><label>Password</label><input id="sPass" type="password" placeholder="Password"></div>
+    <div class="form-row"><label>Department</label>
+      <select id="sDept"><option>Computer Science</option><option>IT</option><option>ECE</option><option>Mechanical</option><option>Civil</option></select>
+    </div>
+    <div class="form-row"><label>Year</label>
+      <select id="sYear"><option value="1">Year 1</option><option value="2">Year 2</option><option value="3">Year 3</option><option value="4">Year 4</option></select>
+    </div>
+    <div class="form-btns">
+      <button class="btn" onclick="closeModal('studentModal')" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="examModal">
+  <div class="modal-card">
+    <h3 class="modal-title" id="examModalTitle">Add Exam</h3>
+    <input type="hidden" id="examId">
+    <div class="form-row"><label>Subject</label><input id="eSubject" placeholder="Subject name"></div>
+    <div class="form-row"><label>Duration (minutes)</label><input id="eDuration" type="number" placeholder="30"></div>
+    <div class="form-row"><label>Total Marks</label><input id="eMarks" type="number" placeholder="50"></div>
+    <div class="form-row"><label>Description</label><textarea id="eDesc" placeholder="Brief exam description"></textarea></div>
+    <div class="form-btns">
+      <button class="btn" onclick="closeModal('examModal')" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExam()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="questionModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Add Question</h3>
+    <div class="form-row"><label>Exam</label><select id="qExamId"></select></div>
+    <div class="form-row"><label>Question</label><textarea id="qText" placeholder="Enter question text"></textarea></div>
+    <div class="form-row"><label>Option A</label><input id="qOptA" placeholder="Option A"></div>
+    <div class="form-row"><label>Option B</label><input id="qOptB" placeholder="Option B"></div>
+    <div class="form-row"><label>Option C</label><input id="qOptC" placeholder="Option C"></div>
+    <div class="form-row"><label>Option D</label><input id="qOptD" placeholder="Option D"></div>
+    <div class="form-row"><label>Correct Answer</label>
+      <select id="qCorrect"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+    </div>
+    <div class="form-btns">
+      <button class="btn" onclick="closeModal('questionModal')" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">Cancel</button>
+      <button class="btn btn-primary" onclick="saveQuestion()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="annModal">
+  <div class="modal-card">
+    <h3 class="modal-title">Post Announcement</h3>
+    <div class="form-row"><label>Title</label><input id="annTitle" placeholder="Announcement title"></div>
+    <div class="form-row"><label>Message</label><textarea id="annMsg" placeholder="Your message..."></textarea></div>
+    <div class="form-btns">
+      <button class="btn" onclick="closeModal('annModal')" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAnnouncement()">Post</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allStudents=[], allExams=[], allResults=[];
+
+function getGrade(pct){return pct>=90?'A+':pct>=80?'A':pct>=70?'B':pct>=60?'C':pct>=50?'D':'F'}
+
+async function init(){
+  const [stats,students,exams,results,leaderboard,announcements]=await Promise.all([
+    fetch('/api/admin/stats').then(r=>r.json()),
+    fetch('/api/admin/students').then(r=>r.json()),
+    fetch('/api/admin/exams').then(r=>r.json()),
+    fetch('/api/admin/results').then(r=>r.json()),
+    fetch('/api/admin/leaderboard').then(r=>r.json()),
+    fetch('/api/admin/announcements').then(r=>r.json())
+  ]);
+  allStudents=students; allExams=exams; allResults=results;
+  renderStats(stats); renderStudents(); renderExams(); renderResults(); renderLeaderboard(leaderboard); renderAnalytics(); renderAnnouncements(announcements); populateExamDropdowns(); renderRecentActivity();
+}
+
+function renderStats(s){
+  document.getElementById('statStudents').textContent=s.total_students;
+  document.getElementById('statExams').textContent=s.total_exams;
+  document.getElementById('statAvg').textContent=s.avg_score+'%';
+  document.getElementById('statAttempts').textContent=s.total_attempts;
+}
+
+function renderRecentActivity(){
+  const recent=allResults.slice(0,8);
+  document.getElementById('recentResults').innerHTML=`
+    <div style="font-family:'Clash Display',sans-serif;font-size:1rem;margin-bottom:.75rem">Recent Activity</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Student</th><th>Subject</th><th>Score</th><th>Grade</th><th>Date</th></tr></thead>
+      <tbody>${recent.map(r=>{const pct=Math.round(r.score/r.total_marks*100);const g=getGrade(pct);return`<tr><td>${r.student_name}</td><td>${r.subject}</td><td>${r.score}/${r.total_marks}</td><td><span style="padding:.2rem .5rem;border-radius:6px;font-size:.78rem;font-weight:600;background:rgba(34,197,94,0.1);color:var(--green)">${g}</span></td><td style="color:var(--muted);font-size:.8rem">${r.date.slice(0,10)}</td></tr>`}).join('')}
+      </tbody></table></div>`;
+}
+
+function renderStudents(data){
+  const d=data||allStudents;
+  document.getElementById('studentCount').textContent=`${d.length} students`;
+  document.getElementById('studentsBody').innerHTML=d.map(s=>`<tr>
+    <td><strong>${s.name}</strong></td>
+    <td style="color:var(--muted);font-size:.82rem">${s.email}</td>
+    <td><span style="background:rgba(124,58,237,0.1);color:var(--purple);padding:.2rem .5rem;border-radius:50px;font-size:.75rem">${s.department}</span></td>
+    <td>Y${s.year}</td>
+    <td>${s.exams_taken}</td>
+    <td>${s.avg_score}%</td>
+    <td><div style="display:flex;gap:.4rem">
+      <button class="btn btn-sm btn-edit" onclick="editStudent(${s.id})">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id})">Del</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function filterStudents(q){renderStudents(allStudents.filter(s=>s.name.toLowerCase().includes(q.toLowerCase())||s.email.toLowerCase().includes(q.toLowerCase())))}
+
+function renderExams(){
+  document.getElementById('examsBody').innerHTML=allExams.map(e=>`<tr>
+    <td style="color:var(--muted);font-size:.82rem">#${e.exam_id}</td>
+    <td><strong>${e.subject}</strong></td>
+    <td>${e.duration} min</td>
+    <td>${e.total_marks}</td>
+    <td><span style="background:rgba(59,130,246,0.1);color:var(--blue);padding:.2rem .5rem;border-radius:50px;font-size:.75rem">${e.question_count} Qs</span></td>
+    <td><div style="display:flex;gap:.4rem">
+      <button class="btn btn-sm btn-edit" onclick="editExam(${e.exam_id})">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteExam(${e.exam_id})">Del</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function renderResults(data){
+  const d=data||allResults;
+  document.getElementById('resultsBody').innerHTML=d.map(r=>{
+    const pct=Math.round(r.score/r.total_marks*100);const g=getGrade(pct);
+    return`<tr>
+      <td><strong>${r.student_name}</strong></td>
+      <td style="color:var(--muted);font-size:.82rem">${r.department}</td>
+      <td>${r.subject}</td>
+      <td>${r.score}/${r.total_marks}</td>
+      <td>${pct}%</td>
+      <td><span style="padding:.2rem .5rem;border-radius:6px;font-size:.78rem;font-weight:600;background:rgba(34,197,94,0.1);color:var(--green)">${g}</span></td>
+      <td style="color:var(--muted);font-size:.8rem">${r.date.slice(0,10)}</td>
+    </tr>`
+  }).join('');
+}
+
+function filterResults(q){renderResults(allResults.filter(r=>r.student_name.toLowerCase().includes(q.toLowerCase())||r.subject.toLowerCase().includes(q.toLowerCase())))}
+
+function renderLeaderboard(leaders){
+  document.getElementById('leaderList').innerHTML=leaders.map((l,i)=>{
+    const cls=i===0?'gold':i===1?'silver':i===2?'bronze':'other';
+    return`<div class="leader-item">
+      <div class="rank ${cls}">${i+1}</div>
+      <div style="flex:1"><strong>${l.name}</strong><div style="font-size:.78rem;color:var(--muted)">${l.department} · ${l.exams_taken} exams</div></div>
+      <div style="text-align:right"><div style="font-family:'Clash Display',sans-serif;font-size:1.1rem">${l.avg_pct}%</div><div style="font-size:.72rem;color:var(--muted)">avg score</div></div>
+    </div>`
+  }).join('');
+}
+
+function renderAnalytics(){
+  // Subject performance
+  const subjectMap={};
+  allResults.forEach(r=>{
+    if(!subjectMap[r.subject]) subjectMap[r.subject]={total:0,count:0};
+    subjectMap[r.subject].total+=r.score/r.total_marks*100;
+    subjectMap[r.subject].count++;
+  });
+  const subjects=Object.entries(subjectMap).map(([k,v])=>({name:k,avg:Math.round(v.total/v.count)})).sort((a,b)=>b.avg-a.avg);
+  document.getElementById('subjectPerf').innerHTML=subjects.map(s=>`
+    <div class="perf-bar">
+      <div class="perf-bar-label">${s.name.split(' ')[0]}</div>
+      <div class="perf-bar-track"><div class="perf-bar-fill" style="width:${s.avg}%"></div></div>
+      <div class="perf-bar-pct">${s.avg}%</div>
+    </div>`).join('');
+  // Grade distribution
+  const grades={};
+  allResults.forEach(r=>{const g=getGrade(r.score/r.total_marks*100);grades[g]=(grades[g]||0)+1});
+  const total=allResults.length;
+  const order=['A+','A','B','C','D','F'];
+  const colors={'A+':'#22c55e','A':'#22c55e','B':'#3b82f6','C':'#eab308','D':'#f97316','F':'#ef4444'};
+  document.getElementById('gradeDistrib').innerHTML=order.filter(g=>grades[g]).map(g=>`
+    <div class="perf-bar">
+      <div class="perf-bar-label" style="min-width:30px">${g}</div>
+      <div class="perf-bar-track"><div class="perf-bar-fill" style="width:${Math.round(grades[g]/total*100)}%;background:${colors[g]}"></div></div>
+      <div class="perf-bar-pct">${grades[g]}</div>
+    </div>`).join('');
+}
+
+function renderAnnouncements(anns){
+  document.getElementById('annList').innerHTML=anns.map(a=>`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:.75rem">
+      <h3 style="font-size:.95rem;margin-bottom:.35rem">${a.title}</h3>
+      <p style="font-size:.85rem;color:var(--muted)">${a.message}</p>
+      <div style="font-size:.75rem;color:var(--border);margin-top:.5rem">${a.created_at.slice(0,10)}</div>
+    </div>`).join('') || '<p style="color:var(--muted)">No announcements yet.</p>';
+}
+
+async function loadQuestions(){
+  const examId=document.getElementById('examFilter').value;
+  const url=examId?`/api/admin/questions/${examId}`:'/api/admin/questions/0';
+  let qs=[];
+  if(examId){qs=await fetch(url).then(r=>r.json())}
+  else{
+    const all=await Promise.all(allExams.map(e=>fetch(`/api/admin/questions/${e.exam_id}`).then(r=>r.json())));
+    qs=all.flat();
+  }
+  document.getElementById('questionsBody').innerHTML=qs.map((q,i)=>`<tr>
+    <td style="color:var(--muted)">${i+1}</td>
+    <td style="max-width:200px;font-size:.82rem">${q.question_text}</td>
+    <td style="font-size:.78rem;color:var(--muted)">${q.option_a}</td>
+    <td style="font-size:.78rem;color:var(--muted)">${q.option_b}</td>
+    <td style="font-size:.78rem;color:var(--muted)">${q.option_c}</td>
+    <td style="font-size:.78rem;color:var(--muted)">${q.option_d}</td>
+    <td><span style="background:rgba(34,197,94,0.1);color:var(--green);padding:.2rem .5rem;border-radius:6px;font-size:.78rem;font-weight:700">${q.correct_answer}</span></td>
+    <td><button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.question_id})">✕</button></td>
+  </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">No questions found.</td></tr>';
+}
+
+function populateExamDropdowns(){
+  const opts=allExams.map(e=>`<option value="${e.exam_id}">${e.subject}</option>`).join('');
+  document.getElementById('examFilter').innerHTML='<option value="">All exams</option>'+opts;
+  document.getElementById('qExamId').innerHTML=opts;
+  loadQuestions();
+}
+
+// STUDENT CRUD
+function openStudentModal(){ document.getElementById('studentId').value=''; document.getElementById('studentModalTitle').textContent='Add Student'; ['sName','sEmail','sPass'].forEach(id=>document.getElementById(id).value=''); document.getElementById('sPasswordRow').style.display='block'; document.getElementById('studentModal').classList.add('show'); }
+function editStudent(id){ const s=allStudents.find(s=>s.id===id); if(!s)return; document.getElementById('studentId').value=id; document.getElementById('studentModalTitle').textContent='Edit Student'; document.getElementById('sName').value=s.name; document.getElementById('sEmail').value=s.email; document.getElementById('sDept').value=s.department; document.getElementById('sYear').value=s.year; document.getElementById('sPasswordRow').style.display='none'; document.getElementById('studentModal').classList.add('show'); }
+async function saveStudent(){
+  const id=document.getElementById('studentId').value;
+  const data={name:document.getElementById('sName').value,email:document.getElementById('sEmail').value,department:document.getElementById('sDept').value,year:document.getElementById('sYear').value};
+  if(!id) data.password=document.getElementById('sPass').value;
+  const url=id?`/api/admin/students/${id}`:'/api/admin/students';
+  const method=id?'PUT':'POST';
+  const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(r=>r.json());
+  if(res.success){ closeModal('studentModal'); const d=await fetch('/api/admin/students').then(r=>r.json()); allStudents=d; renderStudents(); } else alert(res.message||'Error');
+}
+async function deleteStudent(id){ if(!confirm('Delete this student?'))return; await fetch(`/api/admin/students/${id}`,{method:'DELETE'}); const d=await fetch('/api/admin/students').then(r=>r.json()); allStudents=d; renderStudents(); }
+
+// EXAM CRUD
+function openExamModal(){ document.getElementById('examId').value=''; document.getElementById('examModalTitle').textContent='Add Exam'; ['eSubject','eDuration','eMarks','eDesc'].forEach(id=>document.getElementById(id).value=''); document.getElementById('examModal').classList.add('show'); }
+function editExam(id){ const e=allExams.find(e=>e.exam_id===id); if(!e)return; document.getElementById('examId').value=id; document.getElementById('examModalTitle').textContent='Edit Exam'; document.getElementById('eSubject').value=e.subject; document.getElementById('eDuration').value=e.duration; document.getElementById('eMarks').value=e.total_marks; document.getElementById('eDesc').value=e.description||''; document.getElementById('examModal').classList.add('show'); }
+async function saveExam(){
+  const id=document.getElementById('examId').value;
+  const data={subject:document.getElementById('eSubject').value,duration:document.getElementById('eDuration').value,total_marks:document.getElementById('eMarks').value,description:document.getElementById('eDesc').value};
+  const url=id?`/api/admin/exams/${id}`:'/api/admin/exams';
+  const method=id?'PUT':'POST';
+  await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  closeModal('examModal'); const d=await fetch('/api/admin/exams').then(r=>r.json()); allExams=d; renderExams(); populateExamDropdowns();
+}
+async function deleteExam(id){ if(!confirm('Delete this exam and all its questions?'))return; await fetch(`/api/admin/exams/${id}`,{method:'DELETE'}); const d=await fetch('/api/admin/exams').then(r=>r.json()); allExams=d; renderExams(); }
+
+// QUESTION CRUD
+function openQuestionModal(){ ['qText','qOptA','qOptB','qOptC','qOptD'].forEach(id=>document.getElementById(id).value=''); document.getElementById('questionModal').classList.add('show'); }
+async function saveQuestion(){
+  const data={exam_id:document.getElementById('qExamId').value,question_text:document.getElementById('qText').value,option_a:document.getElementById('qOptA').value,option_b:document.getElementById('qOptB').value,option_c:document.getElementById('qOptC').value,option_d:document.getElementById('qOptD').value,correct_answer:document.getElementById('qCorrect').value};
+  await fetch('/api/admin/questions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  closeModal('questionModal'); loadQuestions();
+}
+async function deleteQuestion(id){ if(!confirm('Delete this question?'))return; await fetch(`/api/admin/questions/${id}`,{method:'DELETE'}); loadQuestions(); }
+
+// ANNOUNCEMENTS
+function openAnnModal(){ document.getElementById('annTitle').value=''; document.getElementById('annMsg').value=''; document.getElementById('annModal').classList.add('show'); }
+async function saveAnnouncement(){
+  await fetch('/api/admin/announcements',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:document.getElementById('annTitle').value,message:document.getElementById('annMsg').value})});
+  closeModal('annModal'); const d=await fetch('/api/admin/announcements').then(r=>r.json()); renderAnnouncements(d);
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+window.addEventListener('click', e=>{ if(e.target.classList.contains('modal')) e.target.classList.remove('show'); });
+function showPage(name,el){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); document.getElementById('page-'+name).classList.add('active'); el.classList.add('active'); }
+async function logout(){ await fetch('/api/logout',{method:'POST'}); window.location.href='/login'; }
+
+init();
+</script>
+</body>
+</html>

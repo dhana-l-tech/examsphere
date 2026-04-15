@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard – ExamSphere</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#020617;--surface:#0f172a;--card:#1e293b;--border:#334155;--purple:#7c3aed;--blue:#3b82f6;--pink:#ec4899;--cyan:#06b6d4;--green:#22c55e;--yellow:#eab308;--text:#f8fafc;--muted:#94a3b8}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh}
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:50}
+.sidebar-logo{padding:1.5rem;font-family:'Clash Display',sans-serif;font-size:1.2rem;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-bottom:1px solid var(--border)}
+.sidebar-nav{flex:1;padding:1rem .75rem;display:flex;flex-direction:column;gap:.25rem}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .9rem;border-radius:10px;cursor:pointer;font-size:.9rem;color:var(--muted);transition:all .2s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover,.nav-item.active{background:rgba(124,58,237,0.1);color:var(--text)}
+.nav-item.active{color:var(--purple);font-weight:500}
+.nav-icon{font-size:1.1rem;width:20px;text-align:center}
+.sidebar-bottom{padding:1rem;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--card);border-radius:12px;margin-bottom:.75rem}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:600;flex-shrink:0}
+.user-info{min-width:0}
+.user-name{font-size:.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:.72rem;color:var(--muted)}
+.logout-btn{width:100%;padding:.6rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;color:#ef4444;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;transition:all .2s}
+.logout-btn:hover{background:rgba(239,68,68,0.2)}
+/* MAIN */
+.main{margin-left:240px;flex:1;padding:2rem;overflow-y:auto}
+.page{display:none}.page.active{display:block}
+.page-header{margin-bottom:2rem}
+.page-title{font-family:'Clash Display',sans-serif;font-size:1.6rem;margin-bottom:.25rem}
+.page-sub{color:var(--muted);font-size:.9rem}
+/* CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;inset:0;opacity:.05;background:var(--accent)}
+.stat-label{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+.stat-val{font-family:'Clash Display',sans-serif;font-size:2rem;font-weight:700}
+.stat-change{font-size:.75rem;color:var(--green);margin-top:.25rem}
+/* EXAMS */
+.exam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem}
+.exam-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;transition:all .3s;cursor:pointer;position:relative;overflow:hidden}
+.exam-card:hover{transform:translateY(-3px);border-color:rgba(124,58,237,0.4);box-shadow:0 15px 30px rgba(0,0,0,0.3)}
+.exam-card.done{opacity:.75}
+.exam-subject{font-family:'Clash Display',sans-serif;font-size:1.05rem;margin-bottom:.5rem}
+.exam-meta{display:flex;gap:1rem;margin-bottom:1rem}
+.exam-tag{background:rgba(124,58,237,0.1);color:var(--purple);padding:.25rem .6rem;border-radius:50px;font-size:.75rem}
+.exam-desc{font-size:.85rem;color:var(--muted);line-height:1.5;margin-bottom:1.25rem}
+.start-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.25rem;border-radius:50px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;transition:all .3s;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff}
+.start-btn.done-btn{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.2);cursor:default}
+.start-btn:hover:not(.done-btn){transform:translateY(-1px);box-shadow:0 5px 15px rgba(124,58,237,0.3)}
+/* RESULTS */
+.result-table{width:100%;border-collapse:collapse}
+.result-table th{background:var(--surface);padding:.75rem 1rem;text-align:left;font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+.result-table td{padding:.85rem 1rem;border-bottom:1px solid rgba(51,65,85,0.5);font-size:.9rem}
+.result-table tr:hover td{background:rgba(30,41,59,0.3)}
+.grade-badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;font-size:.8rem;font-weight:700}
+.grade-A{background:rgba(34,197,94,0.15);color:var(--green)}
+.grade-B{background:rgba(59,130,246,0.15);color:var(--blue)}
+.grade-C{background:rgba(234,179,8,0.15);color:var(--yellow)}
+.grade-D,.grade-F{background:rgba(239,68,68,0.15);color:#ef4444}
+/* PROGRESS */
+.progress-bar-wrap{background:rgba(51,65,85,0.5);border-radius:50px;height:8px;overflow:hidden;margin-top:.5rem}
+.progress-bar{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--purple),var(--blue));transition:width 1s ease}
+.chart-bars{display:flex;align-items:flex-end;gap:.5rem;height:120px;margin-top:1rem}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem}
+.bar{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--blue),var(--purple));min-height:4px;transition:height 1s ease}
+.bar-label{font-size:.65rem;color:var(--muted);text-align:center;max-width:50px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">⬡ ExamSphere</div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">⊞</span> Dashboard</button>
+    <button class="nav-item" onclick="showPage('exams',this)"><span class="nav-icon">📋</span> Available Exams</button>
+    <button class="nav-item" onclick="showPage('results',this)"><span class="nav-icon">📊</span> My Results</button>
+    <button class="nav-item" onclick="showPage('progress',this)"><span class="nav-icon">📈</span> Progress</button>
+    <button class="nav-item" onclick="showPage('profile',this)"><span class="nav-icon">👤</span> Profile</button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-pill">
+      <div class="avatar" id="sidebarAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Loading...</div>
+        <div class="user-role">Student</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">← Sign Out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h1 class="page-title" id="welcomeMsg">Welcome back! 👋</h1>
+      <p class="page-sub">Here's your exam overview</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Exams Taken</div><div class="stat-val" id="statTaken">–</div><div class="stat-change">↑ Keep going!</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Score</div><div class="stat-val" id="statAvg">–</div><div class="stat-change">Your performance</div></div>
+      <div class="stat-card"><div class="stat-label">Best Grade</div><div class="stat-val" id="statBest">–</div><div class="stat-change">Personal best</div></div>
+      <div class="stat-card"><div class="stat-label">Dept</div><div class="stat-val" id="statDept" style="font-size:1.3rem">–</div></div>
+    </div>
+    <div id="announcementArea"></div>
+  </div>
+
+  <!-- EXAMS -->
+  <div class="page" id="page-exams">
+    <div class="page-header">
+      <h1 class="page-title">Available Exams</h1>
+      <p class="page-sub">Click on an exam to begin. Each exam can only be taken once.</p>
+    </div>
+    <div class="exam-grid" id="examGrid">Loading...</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="page" id="page-results">
+    <div class="page-header">
+      <h1 class="page-title">My Results</h1>
+      <p class="page-sub">Your complete exam history and scores</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+      <table class="result-table">
+        <thead><tr><th>Subject</th><th>Score</th><th>Percentage</th><th>Grade</th><th>Date</th></tr></thead>
+        <tbody id="resultsBody"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="page" id="page-progress">
+    <div class="page-header">
+      <h1 class="page-title">Progress Overview</h1>
+      <p class="page-sub">Visualize your academic journey</p>
+    </div>
+    <div class="two-col">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+        <h3 style="font-family:'Clash Display',sans-serif;font-size:1rem;margin-bottom:1rem">Score by Subject</h3>
+        <div class="chart-bars" id="chartBars"></div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+        <h3 style="font-family:'Clash Display',sans-serif;font-size:1rem;margin-bottom:1.25rem">Subject Performance</h3>
+        <div id="progressBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="page" id="page-profile">
+    <div class="page-header">
+      <h1 class="page-title">My Profile</h1>
+    </div>
+    <div style="max-width:480px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.25rem">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;margin:0 auto 1rem" id="profileAvatar">?</div>
+        <h2 style="font-family:'Clash Display',sans-serif" id="profileName">–</h2>
+        <p style="color:var(--muted);font-size:.85rem;margin-top:.25rem" id="profileEmail">–</p>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;display:grid;gap:.75rem">
+        <div style="display:flex;justify-content:space-between;padding-bottom:.75rem;border-bottom:1px solid var(--border)"><span style="color:var(--muted);font-size:.85rem">Department</span><span id="profileDept" style="font-size:.85rem">–</span></div>
+        <div style="display:flex;justify-content:space-between;padding-bottom:.75rem;border-bottom:1px solid var(--border)"><span style="color:var(--muted);font-size:.85rem">Year</span><span id="profileYear" style="font-size:.85rem">–</span></div>
+        <div style="display:flex;justify-content:space-between;padding-bottom:.75rem;border-bottom:1px solid var(--border)"><span style="color:var(--muted);font-size:.85rem">Exams Taken</span><span id="profileExams" style="font-size:.85rem">–</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted);font-size:.85rem">Avg Score</span><span id="profileAvg" style="font-size:.85rem">–</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let profile = null, allResults = [], allExams = [];
+
+async function init() {
+  const [p, r, e] = await Promise.all([
+    fetch('/api/student/profile').then(r=>r.json()),
+    fetch('/api/student/results').then(r=>r.json()),
+    fetch('/api/student/exams').then(r=>r.json())
+  ]);
+  profile = p; allResults = r; allExams = e;
+  renderDashboard(); renderExams(); renderResults(); renderProgress(); renderProfile();
+  const ann = await fetch('/api/admin/announcements').then(r=>r.json());
+  renderAnnouncements(ann);
+}
+
+function getGrade(pct){return pct>=90?'A+':pct>=80?'A':pct>=70?'B':pct>=60?'C':pct>=50?'D':'F'}
+
+function renderDashboard(){
+  const initial = profile.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sidebarAvatar').textContent = initial;
+  document.getElementById('sidebarName').textContent = profile.name.split(' ')[0];
+  document.getElementById('welcomeMsg').textContent = `Welcome back, ${profile.name.split(' ')[0]}! 👋`;
+  document.getElementById('statTaken').textContent = profile.exams_taken;
+  document.getElementById('statAvg').textContent = profile.avg_score + '%';
+  document.getElementById('statDept').textContent = profile.department;
+  const grades = allResults.map(r => getGrade(r.score/r.total_marks*100));
+  const order = ['A+','A','B','C','D','F'];
+  const best = grades.sort((a,b)=>order.indexOf(a)-order.indexOf(b))[0] || '–';
+  document.getElementById('statBest').textContent = best;
+}
+
+function renderExams(){
+  const grid = document.getElementById('examGrid');
+  if(!allExams.length){grid.innerHTML='<p style="color:var(--muted)">No exams available.</p>';return}
+  grid.innerHTML = allExams.map(e=>{
+    const done = e.score !== null;
+    const pct = done ? Math.round(e.score/e.total_marks*100) : null;
+    return `<div class="exam-card${done?' done':''}">
+      <div class="exam-subject">${e.subject}</div>
+      <div class="exam-meta">
+        <span class="exam-tag">⏱ ${e.duration} min</span>
+        <span class="exam-tag">📝 ${e.question_count} Qs</span>
+        <span class="exam-tag">🎯 ${e.total_marks} marks</span>
+      </div>
+      <p class="exam-desc">${e.description||''}</p>
+      ${done
+        ? `<button class="start-btn done-btn">✓ Completed — ${pct}%</button>`
+        : `<button class="start-btn" onclick="startExam(${e.exam_id})">Start Exam →</button>`
+      }
+    </div>`
+  }).join('');
+}
+
+function renderResults(){
+  const tbody = document.getElementById('resultsBody');
+  if(!allResults.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">No results yet. Take an exam!</td></tr>';return}
+  tbody.innerHTML = allResults.map(r=>{
+    const pct = Math.round(r.score/r.total_marks*100);
+    const g = getGrade(pct);
+    const gc = g.startsWith('A')?'A':g;
+    return `<tr>
+      <td>${r.subject}</td>
+      <td>${r.score}/${r.total_marks}</td>
+      <td><div style="display:flex;align-items:center;gap:.5rem"><span>${pct}%</span><div style="flex:1;max-width:80px;background:rgba(51,65,85,0.5);border-radius:50px;height:4px"><div style="width:${pct}%;height:100%;border-radius:50px;background:linear-gradient(90deg,var(--purple),var(--blue))"></div></div></div></td>
+      <td><span class="grade-badge grade-${gc}">${g}</span></td>
+      <td style="color:var(--muted);font-size:.8rem">${r.date.slice(0,10)}</td>
+    </tr>`
+  }).join('');
+}
+
+function renderProgress(){
+  const bars = document.getElementById('chartBars');
+  const pbars = document.getElementById('progressBars');
+  if(!allResults.length){bars.innerHTML='<p style="color:var(--muted)">No data yet.</p>';return}
+  const maxPct = Math.max(...allResults.map(r=>r.score/r.total_marks*100));
+  bars.innerHTML = allResults.map(r=>{
+    const pct = Math.round(r.score/r.total_marks*100);
+    const h = Math.round((pct/maxPct)*100);
+    return `<div class="bar-col">
+      <div class="bar" style="height:${h}px" title="${pct}%"></div>
+      <div class="bar-label">${r.subject.split(' ')[0]}</div>
+    </div>`
+  }).join('');
+  pbars.innerHTML = allResults.map(r=>{
+    const pct = Math.round(r.score/r.total_marks*100);
+    return `<div style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.3rem">
+        <span style="color:var(--muted)">${r.subject.split('&')[0].trim()}</span>
+        <span>${pct}%</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+    </div>`
+  }).join('');
+}
+
+function renderProfile(){
+  const initial = profile.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('profileAvatar').textContent = initial;
+  document.getElementById('profileName').textContent = profile.name;
+  document.getElementById('profileEmail').textContent = profile.email;
+  document.getElementById('profileDept').textContent = profile.department;
+  document.getElementById('profileYear').textContent = `Year ${profile.year}`;
+  document.getElementById('profileExams').textContent = profile.exams_taken;
+  document.getElementById('profileAvg').textContent = profile.avg_score + '%';
+}
+
+function renderAnnouncements(ann){
+  if(!ann.length)return;
+  const area = document.getElementById('announcementArea');
+  area.innerHTML = `<div style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);border-radius:14px;padding:1.25rem;margin-bottom:1.5rem">
+    <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--purple);margin-bottom:.75rem">📢 Announcements</h3>
+    ${ann.map(a=>`<div style="margin-bottom:.5rem"><strong style="font-size:.9rem">${a.title}</strong><p style="font-size:.85rem;color:var(--muted);margin-top:.2rem">${a.message}</p></div>`).join('')}
+  </div>`;
+}
+
+function startExam(id){
+  if(confirm('Ready to start the exam? The timer will begin immediately!')){
+    window.location.href = `/exam/${id}`;
+  }
+}
+
+function showPage(name, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+async function logout(){
+  await fetch('/api/logout',{method:'POST'});
+  window.location.href='/login';
+}
+
+init();
+</script>
+</body>
+</html>
